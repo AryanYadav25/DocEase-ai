@@ -1,0 +1,42 @@
+# Optional one-command local stack: MongoDB + API + static client.
+# Usage: cp .env.example .env (set AI_PROVIDER / AI_API_KEY), then `docker compose up --build`
+# Open http://localhost:5173
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/docuease
+      CLIENT_ORIGIN: http://localhost:5173
+      APP_BASE_URL: http://localhost:5173
+      PORT: "4000"
+    volumes:
+      - uploads:/app/storage
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:4000
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
+  uploads:

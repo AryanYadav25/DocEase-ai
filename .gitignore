@@ -1,0 +1,24 @@
+# dependencies & builds
+node_modules/
+dist/
+*.tsbuildinfo
+
+# environment & secrets
+.env
+.env.*
+!.env.example
+client/.env
+server/.env
+
+# uploaded documents, temp files, OCR data, test artefacts
+server/storage/
+server/storage-test/
+server/tessdata/*.traineddata
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
