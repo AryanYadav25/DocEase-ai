@@ -131,6 +131,7 @@ async function mapReduce<T extends ZodTypeAny>(schema: T, text: DocText, buildSy
   const metas: ModelMeta[] = [];
   const partials: unknown[] = [];
   for (let i = 0; i < text.parts.length; i++) {
+    if (i > 0) await pacePartRequests();
     const { data, result } = await structured(schema, buildSystem(i), P.docBlock(text.parts[i]));
     partials.push(data);
     metas.push(toModelMeta(result));
@@ -140,6 +141,9 @@ async function mapReduce<T extends ZodTypeAny>(schema: T, text: DocText, buildSy
   metas.push(toModelMeta(result));
   return { data, metas };
 }
+
+/** Small pause between parts of a long document so free-tier per-minute budgets are not exhausted in a burst. */
+const pacePartRequests = () => new Promise((r) => setTimeout(r, env.AI_PART_DELAY_MS));
 
 function mergeMetas(metas: ModelMeta[]): ModelMeta {
   const first = metas[0];

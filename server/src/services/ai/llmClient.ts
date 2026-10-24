@@ -129,13 +129,20 @@ export async function complete(options: CompletionOptions): Promise<CompletionRe
       if (!res.ok) {
         const errText = await res.text().catch(() => '');
         const message = extractProviderError(errText) || `${res.status} ${res.statusText}`;
-        if (RETRYABLE.has(res.status) && attempt <= env.AI_MAX_RETRIES) {
+        if (RETRYABLE.has(res.status) && attempt <= env.AI_MAX_RETRIES && !(res.status === 429 && isDailyQuotaError(message))) {
           lastErr = new Error(message);
-          await sleep(backoff(attempt, res.headers.get('retry-after')));
+          const wait = backoff(attempt, res.headers.get('retry-after'));
+          logger.warn({ status: res.status, wait, attempt }, 'AI provider busy, retrying');
+          await sleep(wait);
           continue;
         }
         usageTotals.failures++;
-        if (res.status === 429) throw new AppError(429, 'AI_RATE_LIMITED', `The AI provider rate-limited this request (${cfg.preset.label}). Please wait a moment and try again.`, { details: message });
+        if (res.status === 429) {
+          const daily = isDailyQuotaError(message);
+          throw new AppError(429, 'AI_RATE_LIMITED', daily
+            ? `The AI provider's free daily quota is used up (${cfg.preset.label}). Switch AI_PROVIDER/AI_MODEL or try again tomorrow.`
+            : `The AI provider's free-tier limit was hit (${cfg.preset.label}). Wait a minute and try again, or use a smaller document / lower AI_MAX_INPUT_CHARS.`, { details: message });
+        }
         if (res.status === 401 || res.status === 403) throw new AppError(503, 'AI_NOT_CONFIGURED', `The AI provider rejected the API key (${cfg.preset.label}). Check AI_API_KEY in your .env.`);
         if (res.status === 404 || res.status === 400) throw new AppError(502, 'AI_PROVIDER_ERROR', `The AI provider returned an error: ${message}`, { expose: true });
         throw new AppError(502, 'AI_PROVIDER_ERROR', `The AI provider is currently unavailable (${message}).`, { expose: true });
@@ -241,10 +248,19 @@ function extractProviderError(text: string): string {
   }
 }
 
+/**
+ * Delay before a retry. Free tiers enforce per-minute token budgets, so a 429 with a
+ * Retry-After header is honoured up to 65 s (one full window); otherwise exponential.
+ */
 function backoff(attempt: number, retryAfter?: string | null): number {
   const header = retryAfter ? Number(retryAfter) * 1000 : NaN;
-  if (!Number.isNaN(header) && header > 0) return Math.min(header, 20000);
+  if (!Number.isNaN(header) && header > 0) return Math.min(header + 500, 65000);
   return Math.min(20000, 800 * 2 ** (attempt - 1)) + Math.random() * 300;
+}
+
+/** Daily quotas cannot be waited out; retrying only burns time. */
+function isDailyQuotaError(message: string): boolean {
+  return /per day|daily|TPD|RPD|quota exceeded/i.test(message);
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

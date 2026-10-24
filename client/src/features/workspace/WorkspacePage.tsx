@@ -19,7 +19,7 @@ import { ImageViewer } from '@/features/image-reader/ImageViewer';
 import { PdfViewer, type ViewerHandle } from '@/features/pdf-viewer/PdfViewer';
 import { Thumbnails } from '@/features/pdf-viewer/Thumbnails';
 import type { PDFDocumentProxy } from '@/features/pdf-viewer/pdfjs';
-import { cn, isProcessing, isReady, STATUS_LABELS } from '@/lib/utils';
+import { cn, isProcessing, isReady, scrollIntoContainer, STATUS_LABELS } from '@/lib/utils';
 import { aiApi, documentsApi } from '@/services/api';
 import { TextDocumentViewer } from './TextDocumentViewer';
 
@@ -127,7 +127,7 @@ function Workspace({ id }: { id: string }) {
     viewerRef.current?.goToPage(n);
     setMobileView('document');
     const el = document.querySelector<HTMLElement>(`[data-page="${n}"]`);
-    if (!viewerRef.current && el) el.scrollIntoView({ block: 'start' });
+    if (!viewerRef.current && el) scrollIntoContainer(el, 'start');
   }, []);
 
   const onTextSelected = useCallback((sel: Selection | null) => {

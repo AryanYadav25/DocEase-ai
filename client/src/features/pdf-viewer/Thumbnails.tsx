@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, scrollIntoContainer } from '@/lib/utils';
 import type { PDFDocumentProxy } from './pdfjs';
 
 export function Thumbnails({ pdf, currentPage, onSelect }: { pdf: PDFDocumentProxy; currentPage: number; onSelect: (n: number) => void }) {
@@ -48,7 +48,7 @@ const Thumb = memo(function Thumb({ pdf, pageNumber, active, onSelect }: { pdf: 
   }, [visible, done, pdf, pageNumber]);
 
   useEffect(() => {
-    if (active) ref.current?.scrollIntoView({ block: 'nearest' });
+    if (active) scrollIntoContainer(ref.current, 'nearest');
   }, [active]);
 
   return (

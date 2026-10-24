@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { scrollIntoContainer } from '@/lib/utils';
 import { pdfjsLib, type PDFDocumentProxy } from './pdfjs';
 
 interface Props {
@@ -96,7 +97,7 @@ export const PdfPage = memo(function PdfPage({ pdf, pageNumber, scale, rotation,
         span.classList.add('highlight');
         if (activeMatch && activeMatch.page === pageNumber && activeMatch.index === matchIdx) {
           span.classList.add('selected');
-          span.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          scrollIntoContainer(span, 'center', true);
         }
         matchIdx++;
       }

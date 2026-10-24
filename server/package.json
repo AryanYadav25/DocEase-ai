@@ -53,11 +53,5 @@
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
-  "type": "module",
-  "allowScripts": {
-    "esbuild@0.28.2": true,
-    "argon2@0.41.1": true,
-    "mongodb-memory-server@10.4.3": true,
-    "tesseract.js@5.1.1": true
-  }
+  "type": "module"
 }

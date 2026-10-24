@@ -101,3 +101,22 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 export function slugFilename(title: string, ext: string) {
   return `${title.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'document'}.${ext}`;
 }
+
+/** Scroll `el` into view within its nearest scrollable ancestor only (never the page). */
+export function scrollIntoContainer(el: HTMLElement | null, block: 'start' | 'center' | 'nearest' = 'nearest', smooth = false) {
+  if (!el) return;
+  let parent = el.parentElement;
+  while (parent && !/(auto|scroll)/.test(getComputedStyle(parent).overflowY)) parent = parent.parentElement;
+  if (!parent) return;
+  const pr = parent.getBoundingClientRect();
+  const er = el.getBoundingClientRect();
+  const offset = er.top - pr.top + parent.scrollTop;
+  let top: number;
+  if (block === 'start') top = offset - 8;
+  else if (block === 'center') top = offset - pr.height / 2 + er.height / 2;
+  else {
+    if (er.top >= pr.top && er.bottom <= pr.bottom) return;
+    top = er.top < pr.top ? offset - 8 : offset - pr.height + er.height + 8;
+  }
+  parent.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
+}

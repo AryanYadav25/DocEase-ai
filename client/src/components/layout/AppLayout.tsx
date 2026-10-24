@@ -41,6 +41,12 @@ export function AppLayout() {
   const isWorkspace = location.pathname.startsWith('/app/workspace/');
 
   useEffect(() => setDrawer(false), [location.pathname]);
+  // The app shell is a fixed-height workspace: only panels scroll, never the page itself.
+  useEffect(() => {
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    return () => { document.documentElement.style.overflow = prev; };
+  }, []);
   useEffect(() => {
     try {
       localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0');
@@ -96,7 +102,7 @@ export function AppLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-canvas">
+    <div className="flex h-dvh overflow-hidden bg-canvas">
       {/* Desktop sidebar */}
       <aside className={cn('hidden shrink-0 border-r border-line bg-surface transition-[width] duration-200 lg:block', collapsed ? 'w-16' : 'w-60')}>{sidebar(false)}</aside>
 

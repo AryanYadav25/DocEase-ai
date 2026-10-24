@@ -1,6 +1,8 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { env, isTest } from './config/env.js';
@@ -85,6 +87,15 @@ export function createApp() {
   api.use('/users', userRoutes);
   api.use('/feedback', feedbackRoutes);
   app.use('/api/v1', api);
+
+  // Single-service deployment: serve the built React app from the API when it is present
+  // (CLIENT_DIST_DIR, or ../client/dist). Non-API routes fall back to index.html for the SPA.
+  const clientDist = path.resolve(process.cwd(), env.CLIENT_DIST_DIR ?? '../client/dist');
+  if (fs.existsSync(path.join(clientDist, 'index.html'))) {
+    app.use(express.static(clientDist, { index: false, maxAge: '1h', setHeaders: (res, filePath) => { if (filePath.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); } }));
+    app.get(/^(?!\/api\/).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+    logger.info({ clientDist }, 'Serving frontend from the API');
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);

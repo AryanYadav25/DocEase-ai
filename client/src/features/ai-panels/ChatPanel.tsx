@@ -4,7 +4,7 @@ import { Copy, Eraser, Plus, RefreshCw, Send, ThumbsDown, ThumbsUp, Trash2 } fro
 import { Button } from '@/components/ui/Button';
 import { Alert, Badge, Dropdown, DropdownItem, Spinner } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/Toast';
-import { copyToClipboard, formatRelative } from '@/lib/utils';
+import { copyToClipboard, formatRelative, scrollIntoContainer } from '@/lib/utils';
 import { aiApi } from '@/services/api';
 import type { ChatResult, Message } from '@/types';
 import { AiUnavailable, GeneratedBy, Markdown, errorText, useWorkspace } from './common';
@@ -35,7 +35,7 @@ export function ChatPanel() {
   useEffect(() => {
     if (thread.data) setMessages(thread.data.messages);
   }, [thread.data]);
-  useEffect(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages, pending]);
+  useEffect(() => scrollIntoContainer(bottomRef.current, 'nearest', true), [messages, pending]);
 
   const send = async (text: string, regenerateMessageId?: string) => {
     const message = text.trim();

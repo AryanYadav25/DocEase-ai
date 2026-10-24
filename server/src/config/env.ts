@@ -17,8 +17,11 @@ const booleanish = z
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
-  CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
-  APP_BASE_URL: z.string().default('http://localhost:5173'),
+  // On Render, RENDER_EXTERNAL_URL is the public URL of the service (frontend + API share it).
+  CLIENT_ORIGIN: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:5173'),
+  APP_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:5173'),
+  /** Directory of the built frontend to serve from the API (production single-service deploys). */
+  CLIENT_DIST_DIR: z.string().optional(),
 
   MONGODB_URI: z.string().default('mongodb://127.0.0.1:27017/docuease'),
 
@@ -49,10 +52,11 @@ const envSchema = z.object({
   AI_API_KEY: z.string().optional(),
   AI_MODEL: z.string().optional(),
   AI_BASE_URL: z.string().optional(),
-  AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(2048),
+  AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(1500),
   AI_TIMEOUT_MS: z.coerce.number().int().positive().default(60000),
-  AI_MAX_INPUT_CHARS: z.coerce.number().int().positive().default(24000),
-  AI_MAX_RETRIES: z.coerce.number().int().nonnegative().default(2),
+  AI_MAX_INPUT_CHARS: z.coerce.number().int().positive().default(12000), // ~3k tokens per request: fits free-tier per-minute limits
+  AI_PART_DELAY_MS: z.coerce.number().int().nonnegative().default(1500),
+  AI_MAX_RETRIES: z.coerce.number().int().nonnegative().default(3),
   AI_USER_REQUESTS_PER_HOUR: z.coerce.number().int().positive().default(60),
   AI_TRANSLATION_LANGUAGES: z.string().default('English,Hindi,Spanish,French,German,Portuguese,Arabic,Chinese (Simplified),Japanese,Bengali,Tamil'),
 

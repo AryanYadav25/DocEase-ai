@@ -4,7 +4,7 @@ import { Download, Languages, Pencil, RefreshCw, Save, ScanText, X } from 'lucid
 import { Button } from '@/components/ui/Button';
 import { Alert, Badge, Skeleton } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/Toast';
-import { downloadText, slugFilename } from '@/lib/utils';
+import { downloadText, scrollIntoContainer, slugFilename } from '@/lib/utils';
 import { documentsApi, aiApi } from '@/services/api';
 import type { DocumentPage, Summary, TranslationContent } from '@/types';
 import { AiUnavailable, GeneratedBy, PanelHeader, errorText, useWorkspace } from './common';
@@ -48,7 +48,7 @@ export function ExtractedTextPanel({ currentPage }: { currentPage: number }) {
 
   useEffect(() => {
     const el = document.getElementById(`extracted-page-${currentPage}`);
-    el?.scrollIntoView({ block: 'nearest' });
+    scrollIntoContainer(el, 'nearest');
   }, [currentPage]);
 
   const list: DocumentPage[] = pages.data?.pages ?? [];
